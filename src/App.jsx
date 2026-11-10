@@ -3,6 +3,7 @@ import {AnimatePresence, motion, useScroll, useSpring} from 'framer-motion'
 import {makeSwarm} from './swarm'
 import Rings from './Rings'
 import {wedding as w} from './config'
+import Envelope from './Envelope'
 
 const ease = [0.22, 1, 0.36, 1]
 const target = new Date(`${w.date}T${w.time24 || '00:00'}:00${w.offset}`)
@@ -40,46 +41,6 @@ const Letters = ({text, delay = 0.6}) => (
     ))}
   </span>
 )
-
-function Envelope({onStart, onDone}) {
-  const [opening, setOpening] = useState(false)
-  const dust = useMemo(() => Array.from({length: 26}, () => ({left: Math.random() * 100 + '%', '--s': 2 + Math.random() * 3 + 'px', '--d': 7 + Math.random() * 8 + 's', '--dl': -Math.random() * 12 + 's', '--dx': Math.random() * 60 - 30 + 'px'})), [])
-  const go = () => {
-    if (opening) return
-    setOpening(true); onStart()
-    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches
-    setTimeout(onDone, reduce ? 250 : 2600)
-  }
-  const short = `${fmt({day: '2-digit'})} · ${fmt({month: '2-digit'})} · ${fmt({year: 'numeric'})}`
-  return (
-    <motion.div id="intro" exit={{opacity: 0, scale: 1.04}} transition={{duration: 1.1}}>
-      <div className="dust" aria-hidden>{dust.map((d, i) => <i key={i} style={d} />)}</div>
-      <div className="env-scene">
-        <motion.p className="invited" initial={{opacity: 0, y: -10}} animate={{opacity: opening ? 0 : 1, y: 0}} transition={{duration: 1.2, delay: 0.2}}>You are invited</motion.p>
-        <motion.div initial={{opacity: 0, y: 40, scale: 0.94}} animate={{opacity: 1, y: 0, scale: 1}} transition={{duration: 1.3, ease}}>
-          <div className={`envelope-wrap ${opening ? 'opening' : ''}`} role="button" tabIndex={0} aria-label="Open the wedding invitation"
-            onClick={go} onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), go())}>
-            <div className="envelope">
-              <div className="env-back" />
-              <div className="env-letter"><div className="letter-inner">
-                {w.bismillah && <div className="letter-ar">بسم الله الرحمن الرحيم</div>}
-                <div className="letter-monogram">{w.groom[0]} <em>&amp;</em> {w.bride[0]}</div>
-                <div className="letter-ornament">✦ ✦ ✦</div>
-                <div className="letter-names">{full}</div>
-                <div className="letter-date">{short}</div>
-              </div></div>
-              <div className="env-front" />
-              <div className="env-foil"><span>The Wedding of</span><b>{full}</b></div>
-              <div className="env-flap" />
-              <div className="env-seal"><span>{w.groom[0]}<em>&amp;</em>{w.bride[0]}</span></div>
-            </div>
-          </div>
-        </motion.div>
-        <motion.p className="touch-hint" initial={{opacity: 0}} animate={{opacity: opening ? 0 : 1}} transition={{delay: 1}}>Touch the seal to open</motion.p>
-      </div>
-    </motion.div>
-  )
-}
 
 const PAL = [['#fbeec6', '#d9b876', '#a17d3c', '#5c451c'], ['#fffaea', '#ead9a8', '#c8a766', '#7a5a24'], ['#ffe9df', '#e8b9a0', '#c58a6b', '#7b4a35']]
 const VAR = [0, 0, 0, 1, 2, 0, 1]
