@@ -133,7 +133,7 @@ function ButterflyDate() {
           ))}
         </div>
         {phase === 'scattering' && <div className="sparks" aria-hidden>{SPARKS.map((sp, i) => <i key={i} style={sp} />)}</div>}
-        <motion.div className={`hero-date ${revealed ? 'revealed' : ''}`} animate={revealed ? {opacity: 1, filter: 'blur(0px)', scale: 1.08, y: 0} : {opacity: 0, filter: 'blur(14px)', scale: 0.82, y: 10}} transition={{duration: 1.2, ease}}>
+        <motion.div className={`hero-date ${revealed ? 'revealed' : ''}`} animate={revealed ? {opacity: 1, filter: 'blur(0px)', scale: 1, y: 0} : {opacity: 0, filter: 'blur(14px)', scale: 0.82, y: 10}} transition={{duration: 1.2, ease}}>
           <span className="dline"><i />✦<i /></span>
           <span className="dow">{fmt({weekday: 'long'})}</span>
           <span className="dmain">{fmt({day: 'numeric', month: 'long', year: 'numeric'})}</span>
@@ -273,6 +273,7 @@ function Families() {
 
 export default function App() {
   const [open, setOpen] = useState(false)
+  const [exitIntro, setExitIntro] = useState(false)
   const [sound, setSound] = useState(false)
   const [audioError, setAudioError] = useState(false)
   const audio = useRef(), rings = useRef()
@@ -309,12 +310,21 @@ export default function App() {
     <>
       <div className="starfield" aria-hidden>{STAR_PARTICLES.map((star, i) => <i key={i} style={star} />)}</div>
       <div className="grain" aria-hidden />
-      <AnimatePresence>{!open && <Envelope onStart={startMusic} onDone={() => { setOpen(true); scrollTo({top: 0}) }} />}</AnimatePresence>
+      <AnimatePresence
+        onExitComplete={() => {
+          if (exitIntro) {
+            setOpen(true)
+            scrollTo({top: 0, left: 0})
+          }
+        }}
+      >
+        {!exitIntro && <Envelope onStart={startMusic} onDone={() => setExitIntro(true)} />}
+      </AnimatePresence>
       {open && (
         <main>
           <motion.div className="bar" style={{scaleX: bar}} />
           <header className="nav">
-            <span className="mono">{w.groom[0]} ✳ {w.bride[0]}</span>
+            <span className="mono">{w.groom[0]} &amp; {w.bride[0]}</span>
           </header>
 
           <header className="hero">
@@ -355,33 +365,32 @@ export default function App() {
           <footer>With love ✳ Kozhikode · {fmt({year: 'numeric'})}</footer>
         </main>
       )}
-      {open && w.musicUrl && (
-        <>
-          <button
-            type="button"
-            className={`music-control ${sound ? 'is-playing' : ''}`}
-            onClick={toggle}
-            aria-label={sound ? 'Mute music' : 'Play music'}
-            aria-pressed={sound}
-            aria-describedby={audioError ? 'music-error' : undefined}
-          >
-            <span className="music-disc" aria-hidden="true">
-              <svg viewBox="0 0 32 32" focusable="false">
-                <path d="M5 12v8h5l7 5V7l-7 5H5Z" />
-                {sound ? (
-                  <>
-                    <path className="music-wave" d="M21 11a7 7 0 0 1 0 10" />
-                    <path className="music-wave music-wave-outer" d="M24 8a11 11 0 0 1 0 16" />
-                  </>
-                ) : (
-                  <path d="m21 12 7 8m0-8-7 8" />
-                )}
-              </svg>
-            </span>
-          </button>
-          {audioError && <span id="music-error" className="music-error" role="status">Music could not be played.</span>}
-        </>
+      {w.musicUrl && (
+        <motion.button
+          type="button"
+          className={`music-control ${sound ? 'is-playing' : ''}`}
+          onClick={toggle}
+          aria-label={sound ? 'Mute music' : 'Play music'}
+          aria-pressed={sound}
+          aria-describedby={open && audioError ? 'music-error' : undefined}
+          aria-hidden={!open}
+          tabIndex={open ? 0 : -1}
+          disabled={!open}
+          initial={false}
+          animate={open
+            ? {opacity: 1, scale: 1, y: 0, pointerEvents: 'auto'}
+            : {opacity: 0, scale: 0.88, y: 10, pointerEvents: 'none'}}
+          transition={{duration: 0.45, ease}}
+        >
+          <span className="music-disc" aria-hidden="true">
+            <svg viewBox="0 0 32 32" focusable="false">
+              <path className="music-note" d="M22 4v14a3 3 0 1 1-2-2.83V9l-8 1.7V20a3 3 0 1 1-2-2.83V7.5L22 4Z" />
+              {!sound && <path className="music-muted" d="m6 6 20 20" />}
+            </svg>
+          </span>
+        </motion.button>
       )}
+      {open && audioError && <span id="music-error" className="music-error" role="status">Music could not be played.</span>}
       <audio
         ref={audio}
         loop
