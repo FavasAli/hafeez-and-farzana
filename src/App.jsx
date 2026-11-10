@@ -274,14 +274,37 @@ function Families() {
 export default function App() {
   const [open, setOpen] = useState(false)
   const [sound, setSound] = useState(false)
+  const [audioError, setAudioError] = useState(false)
   const audio = useRef(), rings = useRef()
   const {scrollYProgress: page} = useScroll()
   const bar = useSpring(page, {stiffness: 120, damping: 30})
   const {scrollYProgress: rp} = useScroll({target: rings, offset: ['start end', 'center center']})
   const ringProgress = useSpring(rp, {stiffness: 60, damping: 20})
   useEffect(() => { document.body.style.overflow = open ? '' : 'hidden' }, [open])
-  const startMusic = async () => { if (!w.musicUrl) return; try { await audio.current.play(); setSound(true) } catch {} }
-  const toggle = async () => { if (!w.musicUrl) return; try { sound ? audio.current.pause() : await audio.current.play(); setSound(!sound) } catch {} }
+  const startMusic = async () => {
+    if (!w.musicUrl) return
+    try {
+      await audio.current.play()
+      setAudioError(false)
+    } catch (error) {
+      console.error('Unable to play the wedding music.', error)
+      setAudioError(true)
+    }
+  }
+  const toggle = async () => {
+    if (!w.musicUrl || !audio.current) return
+    if (!audio.current.paused) {
+      audio.current.pause()
+      return
+    }
+    try {
+      await audio.current.play()
+      setAudioError(false)
+    } catch (error) {
+      console.error('Unable to play the wedding music.', error)
+      setAudioError(true)
+    }
+  }
   return (
     <>
       <div className="starfield" aria-hidden>{STAR_PARTICLES.map((star, i) => <i key={i} style={star} />)}</div>
@@ -332,7 +355,40 @@ export default function App() {
           <footer>With love ✳ Kozhikode · {fmt({year: 'numeric'})}</footer>
         </main>
       )}
-      <audio ref={audio} loop src={w.musicUrl || undefined} />
+      {open && w.musicUrl && (
+        <>
+          <button
+            type="button"
+            className={`music-control ${sound ? 'is-playing' : ''}`}
+            onClick={toggle}
+            aria-label={sound ? 'Mute music' : 'Play music'}
+            aria-pressed={sound}
+            aria-describedby={audioError ? 'music-error' : undefined}
+          >
+            <span className="music-disc" aria-hidden="true">
+              <svg viewBox="0 0 32 32" focusable="false">
+                <path d="M5 12v8h5l7 5V7l-7 5H5Z" />
+                {sound ? (
+                  <>
+                    <path className="music-wave" d="M21 11a7 7 0 0 1 0 10" />
+                    <path className="music-wave music-wave-outer" d="M24 8a11 11 0 0 1 0 16" />
+                  </>
+                ) : (
+                  <path d="m21 12 7 8m0-8-7 8" />
+                )}
+              </svg>
+            </span>
+          </button>
+          {audioError && <span id="music-error" className="music-error" role="status">Music could not be played.</span>}
+        </>
+      )}
+      <audio
+        ref={audio}
+        loop
+        src={w.musicUrl || undefined}
+        onPlay={() => { setSound(true); setAudioError(false) }}
+        onPause={() => setSound(false)}
+      />
     </>
   )
 }

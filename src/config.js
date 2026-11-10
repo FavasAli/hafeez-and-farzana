@@ -18,7 +18,7 @@ export const wedding = {
   venue: 'North View Auditorium',
   address: ['Payembra Road, Kuruvattoor', 'Kozhikode, Kerala'],
   mapsUrl: 'https://www.google.com/maps/search/?api=1&query=North+View+Auditorium%2C+Payembra+Road%2C+Kuruvattoor%2C+Kozhikode',
-  musicUrl: '',   // e.g. '/music.mp3' (put the file in /public)
+  musicUrl: '/muisc/bgmusic.mp3',   // put the file in /public
   gallery: {
     albums: [
       { label: 'Our moments', albumUrl: '', empty: 'Our photos will appear here soon.' },
