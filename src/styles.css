@@ -1,6 +1,6 @@
 :root{--grain:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.4  0 0 0 0 0.32  0 0 0 0 0.2  0 0 0 0.16 0'/></filter><rect width='160' height='160' filter='url(%23n)'/></svg>");--bg:#0f120d;--bg2:#171b13;--gold:#d9ae55;--gold2:#f4d784;--fg:#efe6d2;--mut:#a79d85;--serif:'Cormorant Garamond',Georgia,serif;--sans:'Jost',system-ui,sans-serif}
 *{box-sizing:border-box;margin:0}
-html{scroll-behavior:smooth;overflow-x:clip}
+html{scroll-behavior:smooth;overflow-x:clip;scrollbar-gutter:stable}
 body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-weight:300;-webkit-font-smoothing:antialiased}
 .grain{position:fixed;inset:0;pointer-events:none;z-index:50;opacity:.07;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
 h1,h2{font-family:var(--serif);font-weight:400;line-height:1.05}
@@ -187,19 +187,19 @@ footer{padding:36px 22px 50px;text-align:center;font-size:.7rem;letter-spacing:.
 .stage.classic .bfly{width:26px;height:22px;margin:-11px 0 0 -13px}
 .stage.classic .cloud{height:340px}
 .hint.hide{animation:none;opacity:0}
-.music-control{position:fixed;right:clamp(18px,4vw,36px);bottom:calc(18px + env(safe-area-inset-bottom));z-index:45;width:76px;height:76px;display:grid;place-items:center;padding:0;border:0;border-radius:50%;background:rgba(15,18,13,.74);color:#74591d;cursor:pointer;-webkit-tap-highlight-color:transparent;box-shadow:0 4px 20px rgba(0,0,0,.4);transition:transform .3s ease}
-.music-control::before,.music-control::after{content:"";position:absolute;display:none;inset:5px;border:1px solid rgba(217,174,85,.55);border-radius:50%;pointer-events:none;animation:none}
+.music-control{position:fixed;right:clamp(18px,4vw,36px);bottom:calc(18px + env(safe-area-inset-bottom));z-index:45;width:76px;height:76px;display:grid;place-items:center;padding:0;border:0;border-radius:50%;background:rgba(15,18,13,.74);color:#74591d;cursor:pointer;-webkit-tap-highlight-color:transparent;box-shadow:0 4px 20px rgba(0,0,0,.4);will-change:transform,opacity;backface-visibility:hidden}
+.music-control::before,.music-control::after{content:"";position:absolute;inset:5px;border:1px solid rgba(217,174,85,.55);border-radius:50%;pointer-events:none;opacity:0;will-change:transform,opacity}
 .music-control::after{inset:-5px;border-color:rgba(217,174,85,.3)}
+.music-control{transition:box-shadow .6s ease}
 .music-control.is-playing{box-shadow:0 4px 20px rgba(0,0,0,.4),inset 0 0 0 4px rgba(217,174,85,.12)}
-.music-control.is-playing::before,.music-control.is-playing::after{display:block;animation:music-ring 2.4s ease-out infinite}
-.music-control.is-playing::after{animation-delay:1.2s}
-.music-control:hover{transform:scale(1.05)}
+.music-control.is-playing::before,.music-control.is-playing::after{animation:music-ring 2.8s cubic-bezier(.2,.6,.35,1) infinite}
+.music-control.is-playing::after{animation-delay:1.4s}
 .music-disc{position:relative;z-index:1;width:50px;height:50px;display:grid;place-items:center;border:1px solid rgba(255,244,197,.56);border-radius:50%;background:radial-gradient(circle at 35% 28%,#f7e7a5,#d9b85b 68%,#b28a37);box-shadow:0 3px 9px rgba(0,0,0,.45),inset 0 1px 3px rgba(255,255,255,.55)}
 .music-disc svg{width:24px;height:24px;fill:none;stroke:#71561b;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .music-disc svg .music-note{fill:#71561b;stroke:none}
 .music-disc svg .music-muted{fill:none;stroke:#71561b;stroke-width:2.5}
 .music-error{position:fixed;right:28px;bottom:calc(106px + env(safe-area-inset-bottom));z-index:45;padding:8px 12px;border:1px solid rgba(217,174,85,.45);border-radius:4px;background:rgba(15,18,13,.92);color:var(--gold2);font-size:.75rem}
-@keyframes music-ring{0%{transform:scale(.9);opacity:.85}100%{transform:scale(1.24);opacity:0}}
+@keyframes music-ring{0%{transform:scale(.92);opacity:0}15%{opacity:.8}100%{transform:scale(1.28);opacity:0}}
 @media(max-width:480px){.music-control{width:68px;height:68px}.music-disc{width:46px;height:46px}}
 
 .starfield{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
@@ -223,5 +223,19 @@ main{z-index:1}
 @media(prefers-reduced-motion:reduce){
   .starfield i{animation:none}
   .gallery-track{animation:none}
+  .music-control::before,.music-control::after{animation:none!important}
   .gallery-marquee{overflow-x:auto;mask-image:none}
 }
+
+/* music button: live equalizer while playing (transform-only animation, cheap to render) */
+.eq{display:flex;align-items:flex-end;gap:3px;height:18px}
+.eq i{width:3px;height:100%;border-radius:2px;background:#71561b;transform-origin:50% 100%;animation:eq 1s ease-in-out infinite}
+.eq i:nth-child(2){animation-duration:.8s;animation-delay:-.3s}
+.eq i:nth-child(3){animation-duration:1.15s;animation-delay:-.5s}
+.eq i:nth-child(4){animation-duration:.9s;animation-delay:-.15s}
+@keyframes eq{0%,100%{transform:scaleY(.3)}50%{transform:scaleY(1)}}
+/* realistic butterflies */
+.stage:not(.classic) .bfly{width:40px;height:32px;margin:-16px 0 0 -20px}
+.stage:not(.classic) .wl{transform-origin:30px 24px;animation:flap-real var(--fd) cubic-bezier(.45,0,.55,1) infinite var(--fdel)}
+@keyframes flap-real{0%,100%{transform:scaleX(1)}50%{transform:scaleX(.18)}}
+@media(prefers-reduced-motion:reduce){.eq i{animation:none;transform:scaleY(.6)}}

@@ -1,0 +1,149 @@
+/* =====================================================================
+   Light theme: ivory linen + antique gold.
+   Loaded after styles.css (see main.jsx). Remove that one import to go
+   back to the dark theme; nothing else depends on this file.
+   ===================================================================== */
+:root{
+  --bg:#f4efe7;          /* linen ivory */
+  --bg2:#ebe3d6;
+  --paper:#fffdf8;       /* card / surface white */
+  --fg:#2f2a22;          /* warm charcoal text */
+  --mut:#7a705f;
+  --gold:#8e6e34;        /* antique gold, dark enough to read on ivory */
+  --gold2:#7a5c24;
+  --gold-soft:#c9a45c;   /* decorative gold for lines and glows */
+  --line:rgba(142,110,52,.28);
+  --shadow:0 18px 48px rgba(110,85,40,.10),0 2px 6px rgba(110,85,40,.06);
+}
+body{background:radial-gradient(ellipse 120% 70% at 50% 0%,#fbf8f2 0%,var(--bg) 55%) fixed,var(--bg);color:var(--fg);font-weight:400}
+.grain{opacity:.035;mix-blend-mode:multiply}
+::selection{background:rgba(201,164,92,.3)}
+em{background-image:linear-gradient(100deg,#8a6a30,#c19a52 50%,#8a6a30)}
+
+/* buttons, nav, tabs */
+.btn{color:var(--gold2);border-color:var(--gold-soft);background:rgba(255,253,248,.6)}
+.btn:hover{background:var(--gold);border-color:var(--gold);color:#fffdf8}
+.btn:focus-visible,button:focus-visible{outline-color:var(--gold)}
+.bar{background:linear-gradient(90deg,var(--gold-soft),var(--gold))}
+.nav{background:linear-gradient(rgba(244,239,231,.95),rgba(244,239,231,0))}
+.mono{color:var(--gold)}
+.nav button,.tabs button{border-color:var(--line);color:var(--mut);background:rgba(255,253,248,.5)}
+.nav button.on,.tabs .sel{border-color:var(--gold-soft);color:var(--gold2);background:rgba(201,164,92,.12)}
+
+/* hero: same photo, washed in ivory instead of darkened */
+.hero{background:linear-gradient(180deg,rgba(244,239,231,.80),rgba(244,239,231,.94) 70%,var(--bg)),url('https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=2000&q=80') center/cover}
+.hero::after{border-color:var(--line);outline:1px solid rgba(142,110,52,.12);outline-offset:-7px}
+.hname{color:var(--fg)}
+.hdate{color:var(--gold)}
+.cue{color:var(--mut)}
+
+/* butterflies + date: deepen the gold so it reads on ivory */
+.swarm{filter:brightness(.9) saturate(1.1) drop-shadow(0 1px 2px rgba(110,80,30,.28))}
+.dow{color:var(--gold);text-shadow:none}
+.dmain{background-image:linear-gradient(100deg,#8a6a30 20%,#d8b56a 45%,#8a6a30 70%)}
+.hint{color:var(--gold)}
+.dline,.dline i{color:var(--gold-soft)}
+.sparks i{background:radial-gradient(#fff8e1,#c9a24f 55%,transparent)}
+.hero-date.revealed::before{background:radial-gradient(ellipse,rgba(201,164,92,.22),rgba(201,164,92,.08) 42%,transparent 72%)}
+
+/* surfaces: white cards on linen */
+.card{background:var(--paper);border-color:var(--line);box-shadow:var(--shadow)}
+.count div{background:var(--paper);border-color:var(--line);box-shadow:0 8px 24px rgba(110,85,40,.07)}
+.count strong{color:var(--gold)}
+.today,.sign,.fam h3{color:var(--gold)}
+.meta small{color:var(--gold)}
+.rule{background:var(--gold-soft)}
+.orn{color:var(--gold-soft)}
+.ph,.gallery-photo{background:var(--bg2);border-color:var(--line);box-shadow:0 10px 26px rgba(110,85,40,.10)}
+footer{color:var(--mut);border-top:1px solid var(--line);max-width:960px;margin:0 auto}
+
+/* rings section: soft halo so the gold rings sit on something */
+.ring3d{background:radial-gradient(circle at 50% 50%,rgba(255,253,248,.9),rgba(255,253,248,0) 62%)}
+
+/* floating stars become fine gold dust */
+.starfield i{background:var(--gold-soft);box-shadow:none}
+@keyframes star-drift{0%{transform:translate3d(0,0,0);opacity:.12}50%{opacity:.45}100%{transform:translate3d(var(--star-drift),-85px,0);opacity:.12}}
+
+/* music button: white disc with gold ring */
+.music-control{background:rgba(255,253,248,.92);box-shadow:0 8px 24px rgba(110,85,40,.18);border:1px solid var(--line)}
+.music-control.is-playing{box-shadow:0 8px 24px rgba(110,85,40,.18),inset 0 0 0 4px rgba(201,164,92,.14)}
+.music-control::before,.music-control::after{border-color:rgba(176,141,74,.55)}
+.music-error{background:var(--paper);border-color:var(--line);color:var(--gold2);box-shadow:var(--shadow)}
+
+/* ---------- envelope intro ---------- */
+#envelope-intro{background:radial-gradient(ellipse 70% 60% at 50% 44%,#fffdf8 0%,#f6f1e8 50%,#ebe2d3 100%);color:var(--mut)}
+#envelope-intro::before{background:radial-gradient(ellipse at 50% 45%,transparent 50%,rgba(150,120,70,.14))}
+.ev-light{background:radial-gradient(ellipse at 50% 46%,rgba(255,255,255,.7),transparent 45%)}
+.ev-frame{border-color:rgba(142,110,52,.35)}
+.ev-frame::after{border-color:rgba(142,110,52,.15)}
+.ev-corner{filter:none}
+.ev-corner circle[fill="#0c0e0a"]{fill:#f6f1e8}
+#ev-line stop:nth-child(1){stop-color:#c9a45c}
+#ev-line stop:nth-child(2){stop-color:#a8843f}
+#ev-line stop:nth-child(3){stop-color:#7a5c24}
+.ev-motes i{background:var(--gold-soft);box-shadow:none}
+.e-ar{color:var(--gold)}
+.e-names{color:var(--fg)}
+.e-date{color:var(--gold)}
+.e-hint{color:var(--mut)}
+@keyframes e-breathe{0%,100%{color:var(--mut)}50%{color:var(--gold)}}
+/* ivory envelope with gold edges */
+.e-env{filter:drop-shadow(0 24px 30px rgba(110,85,40,.18)) drop-shadow(0 3px 5px rgba(110,85,40,.12))}
+.e-back{background:linear-gradient(180deg,#d9ccb4 0%,#e6dcc9 40%,#efe7d8 100%)}
+#e-paper stop:nth-child(1){stop-color:#fffefa}
+#e-paper stop:nth-child(2){stop-color:#faf5ec}
+#e-paper stop:nth-child(3){stop-color:#efe6d6}
+#e-paper-flap stop:nth-child(1){stop-color:#fbf7ef}
+#e-paper-flap stop:nth-child(2){stop-color:#fffefa}
+.e-front{filter:drop-shadow(0 3px 4px rgba(110,85,40,.16))}
+.e-seal{filter:drop-shadow(0 5px 7px rgba(110,85,40,.3))}
+.e-seal::after{border-color:rgba(176,141,74,.6)}
+.e-light{background:radial-gradient(ellipse at 50% 62%,rgba(255,255,255,.95),rgba(244,215,132,.25) 38%,transparent 68%)}
+
+/* ---------- update: clearer hero photo ---------- */
+.hero{background:
+  radial-gradient(ellipse 46% 40% at 50% 50%,rgba(250,246,239,.88),rgba(250,246,239,.55) 55%,rgba(250,246,239,0) 100%),
+  linear-gradient(180deg,rgba(244,239,231,.30) 0%,rgba(244,239,231,.12) 45%,rgba(244,239,231,.55) 85%,var(--bg) 100%),
+  url('https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=2000&q=80') center/cover}
+.hero .copy{color:#5d5446}
+
+/* ---------- soft Islamic-pattern backdrop so long sections never look bare ---------- */
+body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 40% 50% at 0% 30%,rgba(232,205,190,.35),transparent 70%),
+    radial-gradient(ellipse 40% 50% at 100% 75%,rgba(214,222,200,.35),transparent 70%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96'%3E%3Cg fill='none' stroke='%23a8843f' stroke-opacity='.15' stroke-width='.8'%3E%3Crect x='30' y='30' width='36' height='36'/%3E%3Crect x='30' y='30' width='36' height='36' transform='rotate(45 48 48)'/%3E%3Ccircle cx='48' cy='48' r='8'/%3E%3Cpath d='M0 48h22.5M73.5 48H96M48 0v22.5M48 73.5V96'/%3E%3Ccircle cx='0' cy='0' r='6'/%3E%3Ccircle cx='96' cy='0' r='6'/%3E%3Ccircle cx='0' cy='96' r='6'/%3E%3Ccircle cx='96' cy='96' r='6'/%3E%3C/g%3E%3C/svg%3E");
+  -webkit-mask-image:radial-gradient(ellipse 38% 75% at 50% 50%,transparent 45%,#000 100%);
+          mask-image:radial-gradient(ellipse 38% 75% at 50% 50%,transparent 45%,#000 100%)}
+.starfield{z-index:0}
+
+/* ---------- butterflies: no glow filter (a filter over 140 animated wings forces a full repaint every frame) ---------- */
+.swarm{filter:none}
+.stage:not(.classic) .bfly svg{filter:none;rotate:var(--tilt,0deg)}
+@media(max-width:700px){body::before{-webkit-mask-image:radial-gradient(ellipse 60% 70% at 50% 50%,transparent 55%,#000 100%);mask-image:radial-gradient(ellipse 60% 70% at 50% 50%,transparent 55%,#000 100%)}}
+
+/* ---------- music button: simple, light, no expanding rings ---------- */
+.music-control{width:62px;height:62px}
+.music-control::before,.music-control::after{display:none}
+.music-disc{width:44px;height:44px;border-color:rgba(255,248,225,.8);box-shadow:0 2px 6px rgba(110,85,40,.25),inset 0 1px 2px rgba(255,255,255,.6)}
+.music-disc svg{width:22px;height:22px}
+.music-disc svg .music-muted{stroke-width:2.2}
+@media(max-width:480px){.music-control{width:56px;height:56px}.music-disc{width:40px;height:40px}}
+/* ---------- envelope intro (#intro, the envelope built into App.jsx) ---------- */
+#intro{background:radial-gradient(ellipse 75% 65% at 50% 42%,#fffdf8 0%,#f6f1e8 50%,#ebe2d3 100%)}
+#intro::after{background:radial-gradient(ellipse at center,transparent 55%,rgba(150,120,70,.14))}
+/* fine double gold frame, like the landing page border */
+#intro::before{content:"";position:absolute;inset:clamp(14px,2.4vw,26px);border:1px solid rgba(142,110,52,.35);outline:1px solid rgba(142,110,52,.14);outline-offset:-6px;pointer-events:none;z-index:1}
+.dust i{background:radial-gradient(#fff8e1,var(--gold-soft) 60%,transparent)}
+.invited{color:var(--gold)}
+.touch-hint{color:var(--gold)}
+/* softer, warm shadows instead of black ones */
+.envelope{filter:drop-shadow(0 22px 30px rgba(110,85,40,.2)) drop-shadow(0 3px 5px rgba(110,85,40,.12))}
+.envelope-wrap:focus-visible{filter:drop-shadow(0 0 16px rgba(201,164,92,.5))}
+/* gold hairline so the cream envelope stands out on ivory */
+.env-back,.env-front{box-shadow:inset 0 0 0 1px rgba(176,141,74,.38)}
+.env-letter{box-shadow:0 2px 10px rgba(110,85,40,.14)}
+.env-seal{box-shadow:0 6px 14px rgba(110,85,40,.35),inset 0 -4px 10px rgba(0,0,0,.3),inset 0 4px 10px rgba(255,255,255,.35),0 0 0 3px rgba(150,110,40,.5),0 0 0 4px rgba(255,235,180,.4);animation:none}
+/* the gold foil name stamp belongs on the envelope front at all times (it was only positioned while opening, so its frame floated loose around the page) */
+.env-foil{position:absolute;left:0;right:0;bottom:9%;z-index:3;text-align:center;pointer-events:none;color:#8a6a2c}
+.env-foil::before{inset:-18% 9% -16%}

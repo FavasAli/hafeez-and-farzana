@@ -41,7 +41,7 @@ export function makeSwarm(CW, CH, total, classic = true) {
       '--fd': fd.toFixed(2) + 's', '--fdel': (-Math.random() * fd).toFixed(2) + 's',
       '--sx': f(Math.cos(sA) * sD, 'px'), '--sy': f(Math.sin(sA) * sD * 0.85 - 200, 'px'),
       '--sd': (Math.random() * 0.55).toFixed(2) + 's', '--rot': f((Math.random() - 0.5) * 90, 'deg'),
-      '--in': (Math.random() * 0.7).toFixed(2) + 's',
+      '--in': (Math.random() * 0.7).toFixed(2) + 's', '--tilt': f((Math.random() - 0.5) * 50, 'deg'),
       '--wing-bg': Math.random() > 0.55
         ? 'radial-gradient(ellipse at 40% 45%,#fbeec6 0%,#e0c78a 40%,#ad8548 75%,#6b4d1e 100%)'
         : 'radial-gradient(ellipse at 40% 45%,#f7e2b6 0%,#d9b876 40%,#a17d3c 75%,#5c451c 100%)'

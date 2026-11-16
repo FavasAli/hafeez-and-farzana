@@ -3,7 +3,7 @@ export const wedding = {
   groom: 'Hafeez', bride: 'Farhana',
   date: '2026-12-26', time24: '', timeLabel: 'To be announced', // time24 e.g. '16:30'
   offset: '+05:30', timezone: 'Asia/Kolkata',
-  butterflyStyle: 'classic', // 'classic' = golden-wing butterflies (original) | 'detailed' = illustrated butterflies
+  butterflyStyle: 'real', // 'real' = realistic blue butterflies | 'classic' = golden-wing butterflies (original)
   bismillah: true, // set false to hide the Arabic opening line
   verse: {
     ar: 'وَمِنْ آيَاتِهِ أَنْ خَلَقَ لَكُم مِّنْ أَنفُسِكُمْ أَزْوَاجًا لِّتَسْكُنُوا إِلَيْهَا وَجَعَلَ بَيْنَكُم مَّوَدَّةً وَرَحْمَةً ۚ إِنَّ فِي ذَٰلِكَ لَآيَاتٍ لِّقَوْمٍ يَتَفَكَّرُونَ',

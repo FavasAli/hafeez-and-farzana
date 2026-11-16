@@ -33,7 +33,7 @@ export default function Rings({progress}) {
       <Suspense fallback={null}>
         <Environment preset="city" />
         <Float speed={1.6} rotationIntensity={0.2} floatIntensity={0.6}><Pair progress={progress} /></Float>
-        <Sparkles count={40} scale={6} size={3} speed={0.4} color="#f4d784" />
+        <Sparkles count={40} scale={6} size={3} speed={0.4} color="#c9a24f" />
       </Suspense>
       <OrbitControls enableZoom={false} enablePan={false} minPolarAngle={1} maxPolarAngle={2.2} />
     </Canvas>

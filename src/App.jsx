@@ -1,10 +1,17 @@
-import {useEffect, useMemo, useRef, useState} from 'react'
+import {Component, useEffect, useMemo, useRef, useState} from 'react'
 import {AnimatePresence, motion, useScroll, useSpring} from 'framer-motion'
 import {makeSwarm} from './swarm'
 import Rings from './Rings'
 import {wedding as w} from './config'
 
 const ease = [0.22, 1, 0.36, 1]
+
+// If the 3D rings fail to load (slow network, blocked CDN), hide them instead of blanking the whole page.
+class SafeBox extends Component {
+  state = {failed: false}
+  static getDerivedStateFromError() { return {failed: true} }
+  render() { return this.state.failed ? null : this.props.children }
+}
 const target = new Date(`${w.date}T${w.time24 || '00:00'}:00${w.offset}`)
 const fmt = (o) => new Intl.DateTimeFormat('en-GB', {timeZone: w.timezone, ...o}).format(target)
 const full = `${w.groom} & ${w.bride}`
@@ -81,19 +88,61 @@ function Envelope({onStart, onDone}) {
   )
 }
 
-const PAL = [['#fbeec6', '#d9b876', '#a17d3c', '#5c451c'], ['#fffaea', '#ead9a8', '#c8a766', '#7a5a24'], ['#ffe9df', '#e8b9a0', '#c58a6b', '#7b4a35']]
-const VAR = [0, 0, 0, 1, 2, 0, 1]
+// function Envelope({onStart, onDone}) {
+//   const [opening, setOpening] = useState(false)
+//   const dust = useMemo(() => Array.from({length: 26}, () => ({left: Math.random() * 100 + '%', '--s': 2 + Math.random() * 3 + 'px', '--d': 7 + Math.random() * 8 + 's', '--dl': -Math.random() * 12 + 's', '--dx': Math.random() * 60 - 30 + 'px'})), [])
+//   const go = () => {
+//     if (opening) return
+//     setOpening(true); onStart()
+//     const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches
+//     setTimeout(onDone, reduce ? 250 : 2600)
+//   }
+//   const short = `${fmt({day: '2-digit'})} · ${fmt({month: '2-digit'})} · ${fmt({year: 'numeric'})}`
+//   return (
+//     <motion.div id="intro" exit={{opacity: 0, scale: 1.04}} transition={{duration: 1.1}}>
+//       <div className="dust" aria-hidden>{dust.map((d, i) => <i key={i} style={d} />)}</div>
+//       <div className="env-scene">
+//         <motion.p className="invited" initial={{opacity: 0, y: -10}} animate={{opacity: opening ? 0 : 1, y: 0}} transition={{duration: 1.2, delay: 0.2}}>You are invited</motion.p>
+//         <motion.div initial={{opacity: 0, y: 40, scale: 0.94}} animate={{opacity: 1, y: 0, scale: 1}} transition={{duration: 1.3, ease}}>
+//           <div className={`envelope-wrap ${opening ? 'opening' : ''}`} role="button" tabIndex={0} aria-label="Open the wedding invitation"
+//             onClick={go} onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), go())}>
+//             <div className="envelope">
+//               <div className="env-back" />
+//               <div className="env-letter"><div className="letter-inner">
+//                 {w.bismillah && <div className="letter-ar">بسم الله الرحمن الرحيم</div>}
+//                 <div className="letter-monogram">{w.groom[0]} <em>&amp;</em> {w.bride[0]}</div>
+//                 <div className="letter-ornament">✦ ✦ ✦</div>
+//                 <div className="letter-names">{full}</div>
+//                 <div className="letter-date">{short}</div>
+//               </div></div>
+//               <div className="env-front" />
+//               <div className="env-foil"><span>The Wedding of</span><b>{full}</b></div>
+//               <div className="env-flap" />
+//               <div className="env-seal"><span>{w.groom[0]}<em>&amp;</em>{w.bride[0]}</span></div>
+//             </div>
+//           </div>
+//         </motion.div>
+//         <motion.p className="touch-hint" initial={{opacity: 0}} animate={{opacity: opening ? 0 : 1}} transition={{delay: 1}}>Touch the seal to open</motion.p>
+//       </div>
+//     </motion.div>
+//   )
+// }
+
+// Realistic butterfly colours: [light, mid, deep] wing tones. Blue by default; add or change rows freely.
+// Realistic butterfly colours: [light, mid, deep] wing tones. Blue by default; add or change rows freely.
+const PAL = [['#8fe3ff', '#2aa6f0', '#0b55b8'], ['#a9d8ff', '#4a8ff2', '#1b3fa8'], ['#7fe0f0', '#1fa0d8', '#0a5f9e']]
+const VAR = [0, 1, 0, 2, 0, 1, 2]
 const SPARKS = Array.from({length: 20}, (_, i) => { const a = (i / 20) * Math.PI * 2, d = 90 + (i % 3) * 45; return {'--dx': Math.cos(a) * d + 'px', '--dy': Math.sin(a) * d * 0.8 + 'px', '--sd': (i % 5) * 0.06 + 's'} })
 
 function ButterflyDate() {
-  const classic = w.butterflyStyle !== 'detailed'
+  const classic = w.butterflyStyle === 'classic'
   const box = useRef(), timers = useRef([])
   const [bugs, setBugs] = useState([])
   const [phase, setPhase] = useState('idle') // idle -> gathered -> scattering
   const [revealed, setRevealed] = useState(false)
   useEffect(() => {
     const {clientWidth: cw, clientHeight: ch} = box.current
-    setBugs(makeSwarm(cw || 440, ch || 340, classic ? (innerWidth < 700 ? 260 : 380) : (innerWidth < 700 ? 110 : 150), classic))
+    setBugs(makeSwarm(cw || 440, ch || 340, classic ? (innerWidth < 700 ? 260 : 380) : (innerWidth < 700 ? 110 : 165), classic))
     const id = requestAnimationFrame(() => requestAnimationFrame(() => setPhase('gathered')))
     return () => { cancelAnimationFrame(id); timers.current.forEach(clearTimeout) }
   }, [])
@@ -109,24 +158,35 @@ function ButterflyDate() {
       <div className="cloud" ref={box}>
         <div className="swarm" aria-hidden>
           <svg width="0" height="0" style={{position: 'absolute'}}><defs>
-            {PAL.map((p, k) => <radialGradient key={k} id={`wg${k}`} cx=".4" cy=".45" r=".8">{p.map((c, j) => <stop key={j} offset={[0, 0.45, 0.8, 1][j]} stopColor={c} />)}</radialGradient>)}
+            {PAL.map((p, k) => (
+              <radialGradient key={k} id={`wg${k}`} cx="0.95" cy="0.45" r="1" gradientUnits="objectBoundingBox">
+                <stop offset="0" stopColor={p[0]} /><stop offset=".45" stopColor={p[1]} /><stop offset="1" stopColor={p[2]} />
+              </radialGradient>
+            ))}
             {PAL.map((p, k) => (
               <g key={k} id={`wing${k}`}>
-                <path d="M14 10C11 2 3 0 1.5 4 .5 8 5 12 14 11Z" fill={`url(#wg${k})`} stroke="#fff3c4" strokeOpacity=".7" strokeWidth=".35" />
-                <path d="M14 11C8 12 3 14 4.5 18 6 21.5 11 19.5 14 13Z" fill={`url(#wg${k})`} stroke="#fff3c4" strokeOpacity=".6" strokeWidth=".35" />
-                <path d="M14 10.4C10 7.5 6 5 2.8 5.2M14 10.8C9.5 9.6 5.2 9 2.4 7.4M13.6 11.6C10 13 6.5 14.5 5 17" stroke={p[3]} strokeOpacity=".38" strokeWidth=".3" fill="none" />
-                <circle cx="6.2" cy="5.8" r="1.1" fill="#fff7dc" opacity=".75" /><circle cx="7.6" cy="16.4" r=".8" fill="#fff7dc" opacity=".55" />
+                {/* forewing + hindwing with a black rim, black veins and white edge spots */}
+                <path d="M29 17C24 9 14 3 4.5 3.8 1.2 4.2.6 7 2 9.6 3.8 14 6 19 9 22.8 14 25 22 24 29 21Z" fill={`url(#wg${k})`} stroke="#10141c" strokeWidth="2.2" strokeLinejoin="round" />
+                <path d="M29 22C22 23.6 14.5 26 10.4 30.8 7.4 35.6 8.8 41.8 13.8 43 18.8 44.2 24 39.4 26.8 33.4 28.4 29.4 29 25.6 29 22Z" fill={`url(#wg${k})`} stroke="#10141c" strokeWidth="2.2" strokeLinejoin="round" />
+                <path d="M29 18 7 6.2M29 19 4.4 10.4M28.4 20 5.6 14.6M27.6 21 8.4 19.6M22 21.4 13 9M29 23 12.2 32.4M29 24.4 11.4 38M28.4 26.4 16.4 41.8M28 28.6 22 40" stroke="#10141c" strokeWidth=".75" strokeLinecap="round" fill="none" />
+                <g fill="#fff">
+                  <circle cx="5.2" cy="6.2" r=".7" /><circle cx="3.4" cy="9" r=".6" /><circle cx="4.6" cy="12.4" r=".6" /><circle cx="6.2" cy="15.8" r=".6" /><circle cx="7.8" cy="19.4" r=".6" />
+                  <circle cx="9.4" cy="4.6" r=".6" /><circle cx="13.6" cy="4.2" r=".55" /><circle cx="18" cy="5.6" r=".5" />
+                  <circle cx="10.6" cy="34" r=".6" /><circle cx="10.8" cy="38.2" r=".6" /><circle cx="13.2" cy="41.6" r=".6" /><circle cx="17" cy="42.2" r=".55" /><circle cx="21" cy="40" r=".55" />
+                </g>
               </g>
             ))}
           </defs></svg>
           {bugs.map((st, i) => (
             <div key={i} className={`bfly ${phase === 'gathered' ? 'gathered' : phase === 'scattering' ? 'scattering' : ''}`} style={st}>
               {classic ? <><span className="wing l" /><span className="wing r" /><span className="body" /></> : (
-              <svg viewBox="0 0 28 22" width="28" height="22">
+              <svg viewBox="0 0 60 48" width="40" height="32">
                 <g className="wl"><use href={`#wing${VAR[i % 7]}`} /></g>
-                <g transform="translate(28 0) scale(-1 1)"><g className="wl"><use href={`#wing${VAR[i % 7]}`} /></g></g>
-                <rect x="13.1" y="6" width="1.8" height="12.5" rx=".9" fill="#4a340e" /><circle cx="14" cy="5.6" r="1.4" fill="#4a340e" />
-                <path d="M13.5 4.6C12.6 2.6 11.4 1.8 10.4 1.6M14.5 4.6C15.4 2.6 16.6 1.8 17.6 1.6" stroke="#4a340e" strokeWidth=".4" fill="none" strokeLinecap="round" />
+                <g transform="translate(60 0) scale(-1 1)"><g className="wl"><use href={`#wing${VAR[i % 7]}`} /></g></g>
+                <ellipse cx="30" cy="19.6" rx="1.7" ry="3.8" fill="#151a24" /><ellipse cx="30" cy="30.5" rx="1.3" ry="8.2" fill="#151a24" />
+                <circle cx="30" cy="14.6" r="1.6" fill="#151a24" />
+                <path d="M29.4 13.4C28 9 26.4 6 24.6 4.6M30.6 13.4C32 9 33.6 6 35.4 4.6" stroke="#151a24" strokeWidth=".6" fill="none" strokeLinecap="round" />
+                <circle cx="24.5" cy="4.5" r=".8" fill="#151a24" /><circle cx="35.5" cy="4.5" r=".8" fill="#151a24" />
               </svg>
               )}
             </div>
@@ -276,6 +336,12 @@ export default function App() {
   const [exitIntro, setExitIntro] = useState(false)
   const [sound, setSound] = useState(false)
   const [audioError, setAudioError] = useState(false)
+  const [showMusic, setShowMusic] = useState(false)
+  useEffect(() => {   // bring the music button in after the landing page has settled, so it glides in once instead of stuttering
+    if (!open) return
+    const id = setTimeout(() => setShowMusic(true), 1200)
+    return () => clearTimeout(id)
+  }, [open])
   const audio = useRef(), rings = useRef()
   const {scrollYProgress: page} = useScroll()
   const bar = useSpring(page, {stiffness: 120, damping: 30})
@@ -348,7 +414,7 @@ export default function App() {
 
           <section className="sec" ref={rings}>
             <Reveal><p className="small">The day we&apos;ve been waiting for</p><h2>Awaiting our <em>union</em></h2></Reveal>
-            <div className="ring3d"><Rings progress={ringProgress} /></div>
+            <SafeBox><div className="ring3d"><Rings progress={ringProgress} /></div></SafeBox>
             <Countdown />
           </section>
 
@@ -372,25 +438,25 @@ export default function App() {
           onClick={toggle}
           aria-label={sound ? 'Mute music' : 'Play music'}
           aria-pressed={sound}
-          aria-describedby={open && audioError ? 'music-error' : undefined}
-          aria-hidden={!open}
-          tabIndex={open ? 0 : -1}
-          disabled={!open}
+          aria-describedby={showMusic && audioError ? 'music-error' : undefined}
+          aria-hidden={!showMusic}
+          tabIndex={showMusic ? 0 : -1}
+          disabled={!showMusic}
           initial={false}
-          animate={open
-            ? {opacity: 1, scale: 1, y: 0, pointerEvents: 'auto'}
-            : {opacity: 0, scale: 0.88, y: 10, pointerEvents: 'none'}}
-          transition={{duration: 0.45, ease}}
+          style={{pointerEvents: showMusic ? 'auto' : 'none'}}
+          animate={showMusic ? {opacity: 1, scale: 1} : {opacity: 0, scale: 0.85}}
+          transition={{opacity: {duration: 0.8, ease: 'easeOut'}, scale: {type: 'spring', stiffness: 170, damping: 22, mass: 0.9}}}
+          whileHover={showMusic ? {scale: 1.06} : undefined}
+          whileTap={showMusic ? {scale: 0.94} : undefined}
         >
           <span className="music-disc" aria-hidden="true">
-            <svg viewBox="0 0 32 32" focusable="false">
-              <path className="music-note" d="M22 4v14a3 3 0 1 1-2-2.83V9l-8 1.7V20a3 3 0 1 1-2-2.83V7.5L22 4Z" />
-              {!sound && <path className="music-muted" d="m6 6 20 20" />}
-            </svg>
+            {sound
+              ? <span className="eq"><i /><i /><i /><i /></span>
+              : <svg viewBox="0 0 32 32" focusable="false"><path className="music-note" d="M5 12.5v7h5l7 5.5V7l-7 5.5H5Z" /><path className="music-muted" d="m21 13 6 6m0-6-6 6" /></svg>}
           </span>
         </motion.button>
       )}
-      {open && audioError && <span id="music-error" className="music-error" role="status">Music could not be played.</span>}
+      {showMusic && audioError && <span id="music-error" className="music-error" role="status">Music could not be played.</span>}
       <audio
         ref={audio}
         loop
