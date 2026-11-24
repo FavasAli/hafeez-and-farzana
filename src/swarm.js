@@ -34,12 +34,15 @@ export function makeSwarm(CW, CH, total, classic = true) {
     const fd = 1.8 + Math.random() * 1.6
     const base = Math.abs(x) < 1 && Math.abs(y) < 1 ? Math.random() * Math.PI * 2 : Math.atan2(y, x)
     const sA = base + (Math.random() - 0.5) * 1.1, sD = 420 + Math.random() * 880
+    // on narrow screens keep the sideways flight inside the screen, so nothing pokes out past its edges
+    const half = (typeof innerWidth === 'number' ? innerWidth : 1200) / 2 - 24
+    const sxRaw = Math.cos(sA) * sD, room = Math.max(0, half - Math.abs(x)), sx = Math.max(-room, Math.min(room, sxRaw))
     return {
       '--x': f(x, 'px'), '--y': f(y, 'px'),
       '--xi': f(Math.cos(ia) * id, 'px'), '--yi': f(Math.sin(ia) * id, 'px'),
       '--sc': (classic ? 0.55 + Math.random() * 0.75 : 0.75 + Math.random() * 0.45).toFixed(2),
       '--fd': fd.toFixed(2) + 's', '--fdel': (-Math.random() * fd).toFixed(2) + 's',
-      '--sx': f(Math.cos(sA) * sD, 'px'), '--sy': f(Math.sin(sA) * sD * 0.85 - 200, 'px'),
+      '--sx': f(sx, 'px'), '--sy': f(Math.sin(sA) * sD * 0.85 - 200, 'px'),
       '--sd': (Math.random() * 0.55).toFixed(2) + 's', '--rot': f((Math.random() - 0.5) * 90, 'deg'),
       '--in': (Math.random() * 0.7).toFixed(2) + 's', '--tilt': f((Math.random() - 0.5) * 50, 'deg'),
       '--wing-bg': Math.random() > 0.55

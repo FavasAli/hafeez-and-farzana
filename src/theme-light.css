@@ -147,3 +147,22 @@ body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
 /* the gold foil name stamp belongs on the envelope front at all times (it was only positioned while opening, so its frame floated loose around the page) */
 .env-foil{position:absolute;left:0;right:0;bottom:9%;z-index:3;text-align:center;pointer-events:none;color:#8a6a2c}
 .env-foil::before{inset:-18% 9% -16%}
+
+/* ---------- smoother scrolling on the light theme ---------- */
+/* a full-screen blend layer and a fixed background both force the whole page to repaint on every scroll frame */
+.grain{display:none}
+html{background:radial-gradient(ellipse 120% 70% at 50% 0%,#fbf8f2 0%,var(--bg) 55%) no-repeat,var(--bg)}
+body{background:transparent}
+body::before{transform:translateZ(0)}
+.quick a{border-color:var(--line);background:rgba(255,253,248,.7)}
+.quick a:hover{color:var(--gold2);border-color:var(--gold-soft)}
+
+/* ---------- hero: cleaner photo veil + larger names on phones ---------- */
+@media(max-width:600px){
+  .hero{background:
+    radial-gradient(ellipse 80% 42% at 50% 50%,rgba(250,246,239,.9),rgba(250,246,239,.6) 60%,rgba(250,246,239,0) 100%),
+    linear-gradient(180deg,rgba(244,239,231,.55) 0%,rgba(244,239,231,.25) 40%,rgba(244,239,231,.5) 75%,var(--bg) 100%),
+    url('https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1100&q=75') 62% center/cover}
+  .hname{font-size:clamp(2.4rem,11.5vw,3.4rem);letter-spacing:-.02em;margin:.9rem auto 1.1rem}
+  .hero .copy{font-size:1rem}
+}

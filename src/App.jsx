@@ -1,7 +1,9 @@
-import {Component, useEffect, useMemo, useRef, useState} from 'react'
-import {AnimatePresence, motion, useScroll, useSpring} from 'framer-motion'
+import {Component, Suspense, lazy, useEffect, useMemo, useRef, useState} from 'react'
+import {AnimatePresence, motion, useInView, useScroll, useSpring} from 'framer-motion'
 import {makeSwarm} from './swarm'
-import Rings from './Rings'
+// The 3D rings (three.js) are a large download; load them separately, after the page has settled.
+const loadRings = () => import('./Rings')
+const Rings = lazy(loadRings)
 import {wedding as w} from './config'
 
 const ease = [0.22, 1, 0.36, 1]
@@ -33,9 +35,11 @@ const shuffle = (items) => {
   return shuffled
 }
 
-const Reveal = ({children, delay = 0, className}) => (
-  <motion.div className={className} initial={{opacity: 0, y: 40, filter: 'blur(6px)'}}
-    whileInView={{opacity: 1, y: 0, filter: 'blur(0px)'}} viewport={{once: true, margin: '-80px'}}
+const Reveal = ({children, delay = 0, className, play}) => (
+  <motion.div className={className} initial={{opacity: 0, y: 28}}
+    {...(play === undefined
+      ? {whileInView: {opacity: 1, y: 0}, viewport: {once: true, margin: '-60px'}}
+      : {animate: play ? {opacity: 1, y: 0} : {opacity: 0, y: 28}})}
     transition={{duration: 1, delay, ease}}>{children}</motion.div>
 )
 
@@ -55,7 +59,7 @@ function Envelope({onStart, onDone}) {
     if (opening) return
     setOpening(true); onStart()
     const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches
-    setTimeout(onDone, reduce ? 250 : 2600)
+    setTimeout(onDone, reduce ? 250 : w.childPhoto ? 4300 : 2600) // a little longer so the photo can be enjoyed
   }
   const short = `${fmt({day: '2-digit'})} · ${fmt({month: '2-digit'})} · ${fmt({year: 'numeric'})}`
   return (
@@ -68,13 +72,20 @@ function Envelope({onStart, onDone}) {
             onClick={go} onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), go())}>
             <div className="envelope">
               <div className="env-back" />
-              <div className="env-letter"><div className="letter-inner">
+              <div className={`env-letter ${w.childPhoto ? 'is-photo' : ''}`}>
+                {w.childPhoto ? (
+                  <figure className="letter-photo">
+                    <img src={w.childPhoto.src} alt={w.childPhoto.alt || ''} decoding="async" />
+                    <figcaption><i>{w.childPhoto.caption}</i><span>{full}</span></figcaption>
+                  </figure>
+                ) : (<div className="letter-inner">
                 {w.bismillah && <div className="letter-ar">بسم الله الرحمن الرحيم</div>}
                 <div className="letter-monogram">{w.groom[0]} <em>&amp;</em> {w.bride[0]}</div>
                 <div className="letter-ornament">✦ ✦ ✦</div>
                 <div className="letter-names">{full}</div>
                 <div className="letter-date">{short}</div>
-              </div></div>
+                </div>)}
+              </div>
               <div className="env-front" />
               <div className="env-foil"><span>The Wedding of</span><b>{full}</b></div>
               <div className="env-flap" />
@@ -129,9 +140,7 @@ function Envelope({onStart, onDone}) {
 // }
 
 // Realistic butterfly colours: [light, mid, deep] wing tones. Blue by default; add or change rows freely.
-// Realistic butterfly colours: [light, mid, deep] wing tones. Blue by default; add or change rows freely.
-const PAL = [['#8fe3ff', '#2aa6f0', '#0b55b8'], ['#a9d8ff', '#4a8ff2', '#1b3fa8'], ['#7fe0f0', '#1fa0d8', '#0a5f9e']]
-const VAR = [0, 1, 0, 2, 0, 1, 2]
+// Butterfly picture (config.js → butterflyImage). Each half is flapped separately, which the browser animates cheaply.
 const SPARKS = Array.from({length: 20}, (_, i) => { const a = (i / 20) * Math.PI * 2, d = 90 + (i % 3) * 45; return {'--dx': Math.cos(a) * d + 'px', '--dy': Math.sin(a) * d * 0.8 + 'px', '--sd': (i % 5) * 0.06 + 's'} })
 
 function ButterflyDate() {
@@ -140,6 +149,7 @@ function ButterflyDate() {
   const [bugs, setBugs] = useState([])
   const [phase, setPhase] = useState('idle') // idle -> gathered -> scattering
   const [revealed, setRevealed] = useState(false)
+  const visible = useInView(box, {margin: '120px'})
   useEffect(() => {
     const {clientWidth: cw, clientHeight: ch} = box.current
     setBugs(makeSwarm(cw || 440, ch || 340, classic ? (innerWidth < 700 ? 260 : 380) : (innerWidth < 700 ? 110 : 165), classic))
@@ -153,41 +163,14 @@ function ButterflyDate() {
     timers.current.push(setTimeout(() => setRevealed(true), revealDelay), setTimeout(() => setBugs([]), 2900))
   }
   return (
-    <div className={`stage ${classic ? 'classic' : ''} ${phase === 'scattering' ? 'done' : ''}`} role="button" tabIndex={0} aria-label="Touch the butterflies to reveal the wedding date"
+    <div className={`stage ${classic ? 'classic' : ''} ${phase === 'scattering' ? 'done' : ''} ${visible ? '' : 'paused'}`} style={{'--bimg': `url(${w.butterflyImage || '/images/butterfly.webp'})`}} role="button" tabIndex={0} aria-label="Touch the butterflies to reveal the wedding date"
       onClick={scatter} onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), scatter())}>
       <div className="cloud" ref={box}>
         <div className="swarm" aria-hidden>
-          <svg width="0" height="0" style={{position: 'absolute'}}><defs>
-            {PAL.map((p, k) => (
-              <radialGradient key={k} id={`wg${k}`} cx="0.95" cy="0.45" r="1" gradientUnits="objectBoundingBox">
-                <stop offset="0" stopColor={p[0]} /><stop offset=".45" stopColor={p[1]} /><stop offset="1" stopColor={p[2]} />
-              </radialGradient>
-            ))}
-            {PAL.map((p, k) => (
-              <g key={k} id={`wing${k}`}>
-                {/* forewing + hindwing with a black rim, black veins and white edge spots */}
-                <path d="M29 17C24 9 14 3 4.5 3.8 1.2 4.2.6 7 2 9.6 3.8 14 6 19 9 22.8 14 25 22 24 29 21Z" fill={`url(#wg${k})`} stroke="#10141c" strokeWidth="2.2" strokeLinejoin="round" />
-                <path d="M29 22C22 23.6 14.5 26 10.4 30.8 7.4 35.6 8.8 41.8 13.8 43 18.8 44.2 24 39.4 26.8 33.4 28.4 29.4 29 25.6 29 22Z" fill={`url(#wg${k})`} stroke="#10141c" strokeWidth="2.2" strokeLinejoin="round" />
-                <path d="M29 18 7 6.2M29 19 4.4 10.4M28.4 20 5.6 14.6M27.6 21 8.4 19.6M22 21.4 13 9M29 23 12.2 32.4M29 24.4 11.4 38M28.4 26.4 16.4 41.8M28 28.6 22 40" stroke="#10141c" strokeWidth=".75" strokeLinecap="round" fill="none" />
-                <g fill="#fff">
-                  <circle cx="5.2" cy="6.2" r=".7" /><circle cx="3.4" cy="9" r=".6" /><circle cx="4.6" cy="12.4" r=".6" /><circle cx="6.2" cy="15.8" r=".6" /><circle cx="7.8" cy="19.4" r=".6" />
-                  <circle cx="9.4" cy="4.6" r=".6" /><circle cx="13.6" cy="4.2" r=".55" /><circle cx="18" cy="5.6" r=".5" />
-                  <circle cx="10.6" cy="34" r=".6" /><circle cx="10.8" cy="38.2" r=".6" /><circle cx="13.2" cy="41.6" r=".6" /><circle cx="17" cy="42.2" r=".55" /><circle cx="21" cy="40" r=".55" />
-                </g>
-              </g>
-            ))}
-          </defs></svg>
           {bugs.map((st, i) => (
             <div key={i} className={`bfly ${phase === 'gathered' ? 'gathered' : phase === 'scattering' ? 'scattering' : ''}`} style={st}>
               {classic ? <><span className="wing l" /><span className="wing r" /><span className="body" /></> : (
-              <svg viewBox="0 0 60 48" width="40" height="32">
-                <g className="wl"><use href={`#wing${VAR[i % 7]}`} /></g>
-                <g transform="translate(60 0) scale(-1 1)"><g className="wl"><use href={`#wing${VAR[i % 7]}`} /></g></g>
-                <ellipse cx="30" cy="19.6" rx="1.7" ry="3.8" fill="#151a24" /><ellipse cx="30" cy="30.5" rx="1.3" ry="8.2" fill="#151a24" />
-                <circle cx="30" cy="14.6" r="1.6" fill="#151a24" />
-                <path d="M29.4 13.4C28 9 26.4 6 24.6 4.6M30.6 13.4C32 9 33.6 6 35.4 4.6" stroke="#151a24" strokeWidth=".6" fill="none" strokeLinecap="round" />
-                <circle cx="24.5" cy="4.5" r=".8" fill="#151a24" /><circle cx="35.5" cy="4.5" r=".8" fill="#151a24" />
-              </svg>
+              <span className="bf"><i className="rw l" /><i className="rw r" /></span>
               )}
             </div>
           ))}
@@ -205,6 +188,23 @@ function ButterflyDate() {
   )
 }
 
+// Lives inside the landing page, so its scroll and on-screen tracking start only once the section exists.
+// (When this was tracked from the top of the app, it was set up before the page was built and never updated,
+// which left the rings frozen.)
+function RingsSection({open}) {
+  const ref = useRef()
+  const {scrollYProgress} = useScroll({target: ref, offset: ['start end', 'center center']})
+  const progress = useSpring(scrollYProgress, {stiffness: 60, damping: 20})
+  const near = useInView(ref, {margin: '200px'})
+  return (
+    <section className="sec" ref={ref}>
+      <Reveal><p className="small">The day we&apos;ve been waiting for</p><h2>Awaiting our <em>union</em></h2></Reveal>
+      <SafeBox><div className="ring3d"><Suspense fallback={null}><Rings progress={progress} active={near || !open} /></Suspense></div></SafeBox>
+      <Countdown />
+    </section>
+  )
+}
+
 function Countdown() {
   const calc = () => { const ms = Math.max(0, target - Date.now()); return [ms / 864e5, (ms / 36e5) % 24, (ms / 6e4) % 60, (ms / 1e3) % 60].map(Math.floor) }
   const [t, setT] = useState(calc)
@@ -214,7 +214,7 @@ function Countdown() {
     <div className="count">
       {['Days', 'Hours', 'Minutes', 'Seconds'].map((l, i) => (
         <div key={l}>
-          <AnimatePresence mode="popLayout"><motion.strong key={t[i]} initial={{y: -16, opacity: 0}} animate={{y: 0, opacity: 1}} exit={{y: 16, opacity: 0}} transition={{duration: 0.35}}>{String(t[i]).padStart(2, '0')}</motion.strong></AnimatePresence>
+          <strong key={t[i]} className="tick">{String(t[i]).padStart(2, '0')}</strong>
           <span>{l}</span>
         </div>
       ))}
@@ -243,6 +243,13 @@ function Gallery() {
     addEventListener('keydown', k); return () => removeEventListener('keydown', k)
   }, [view, items])
   const step = (d) => (e) => { e.stopPropagation(); setView((v) => (v + d + items.length) % items.length) }
+  const touch = useRef(0)
+  useEffect(() => {   // keep the page still behind the open photo
+    if (view === null) return
+    const html = document.documentElement, prev = html.style.overflow
+    html.style.overflow = 'hidden'
+    return () => { html.style.overflow = prev }
+  }, [view !== null])
   return (
     <section className="sec" id="gallery">
       <Reveal><p className="small">A few moments to cherish</p><h2>Our little <em>gallery</em></h2></Reveal>
@@ -281,9 +288,13 @@ function Gallery() {
         {album.albumUrl && <a className="btn" href={album.albumUrl} target="_blank" rel="noreferrer">Open full album ↗</a>}
       </div>
       <AnimatePresence>{view !== null && items?.[view] && (
-        <motion.div className="lb" onClick={() => setView(null)} initial={{opacity: 0}} animate={{opacity: 1}} exit={{opacity: 0}}>
+        <motion.div className="lb" onClick={() => setView(null)} initial={{opacity: 0}} animate={{opacity: 1}} exit={{opacity: 0}}
+          role="dialog" aria-modal="true" aria-label="Photo viewer"
+          onTouchStart={(e) => { touch.current = e.touches[0].clientX }}
+          onTouchEnd={(e) => { const dx = e.changedTouches[0].clientX - touch.current; if (Math.abs(dx) > 50 && items.length > 1) step(dx < 0 ? 1 : -1)(e) }}>
           <motion.img key={view} src={items[view].b} alt="" referrerPolicy="no-referrer" initial={{opacity: 0, scale: 0.96}} animate={{opacity: 1, scale: 1}} />
           <button aria-label="Close">×</button>
+          {items.length > 1 && <span className="lb-count">{view + 1} / {items.length}</span>}
           {items.length > 1 && <><button className="arr l" onClick={step(-1)} aria-label="Previous">‹</button><button className="arr r" onClick={step(1)} aria-label="Next">›</button></>}
         </motion.div>
       )}</AnimatePresence>
@@ -342,11 +353,25 @@ export default function App() {
     const id = setTimeout(() => setShowMusic(true), 1200)
     return () => clearTimeout(id)
   }, [open])
-  const audio = useRef(), rings = useRef()
+  const audio = useRef()
   const {scrollYProgress: page} = useScroll()
   const bar = useSpring(page, {stiffness: 120, damping: 30})
-  const {scrollYProgress: rp} = useScroll({target: rings, offset: ['start end', 'center center']})
-  const ringProgress = useSpring(rp, {stiffness: 60, damping: 20})
+  // Build the landing page quietly behind the envelope shortly after load, so all the heavy work
+  // (3D rings, butterflies) is finished before the guest opens it. Nothing heavy happens while scrolling.
+  const [ready, setReady] = useState(false)
+  useEffect(() => {
+    const id = setTimeout(() => setReady(true), 900)
+    return () => clearTimeout(id)
+  }, [])
+  const [copied, setCopied] = useState(false)
+  const share = async () => {
+    const data = {title: `${full} | Wedding Invitation`, text: `You're invited to the wedding of ${full}`, url: location.href}
+    try {
+      if (navigator.share) return await navigator.share(data)
+      await navigator.clipboard.writeText(data.url)
+      setCopied(true); setTimeout(() => setCopied(false), 2200)
+    } catch { /* sharing cancelled */ }
+  }
   useEffect(() => { document.body.style.overflow = open ? '' : 'hidden' }, [open])
   const startMusic = async () => {
     if (!w.musicUrl) return
@@ -386,21 +411,22 @@ export default function App() {
       >
         {!exitIntro && <Envelope onStart={startMusic} onDone={() => setExitIntro(true)} />}
       </AnimatePresence>
-      {open && (
-        <main>
+      {(ready || open) && (
+        <main className={open ? '' : 'prep'} aria-hidden={!open || undefined} inert={open ? undefined : ''}>
           <motion.div className="bar" style={{scaleX: bar}} />
           <header className="nav">
-            <span className="mono">{w.groom[0]} &amp; {w.bride[0]}</span>
+            <a className="mono" href="#top" onClick={(e) => { e.preventDefault(); scrollTo({top: 0, behavior: 'smooth'}) }} aria-label="Back to top">{w.groom[0]} &amp; {w.bride[0]}</a>
+            <nav className="quick" aria-label="Sections"><a href="#details">Details</a><a href="#gallery">Gallery</a></nav>
           </header>
 
           <header className="hero">
             <div className="hero-in">
-              {w.bismillah && <Reveal><p className="ar">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</p></Reveal>}
-              <Reveal delay={0.15}><p className="small">The wedding of</p></Reveal>
-              <Reveal delay={0.3}><h1 className="hname">{w.groom} <em>&amp;</em> {w.bride}</h1></Reveal>
-              <Reveal delay={0.45}><p className="copy">Together with our families, we invite you to celebrate the beginning of our beautiful journey together.</p></Reveal>
+              {w.bismillah && <Reveal play={open}><p className="ar">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</p></Reveal>}
+              <Reveal play={open} delay={0.15}><p className="small">The wedding of</p></Reveal>
+              <Reveal play={open} delay={0.3}><h1 className="hname">{w.groom} <em>&amp;</em> {w.bride}</h1></Reveal>
+              <Reveal play={open} delay={0.45}><p className="copy">Together with our families, we invite you to celebrate the beginning of our beautiful journey together.</p></Reveal>
             </div>
-            <motion.span className="cue" animate={{y: [0, 8, 0]}} transition={{repeat: Infinity, duration: 2.4}}>Scroll ↓</motion.span>
+            <button type="button" className="cue" onClick={() => document.querySelector('main .sec')?.scrollIntoView({behavior: 'smooth'})}>Scroll ↓</button>
           </header>
 
           {w.verse && (
@@ -410,13 +436,9 @@ export default function App() {
             </Reveal></section>
           )}
 
-          <section className="sec"><Reveal><p className="small">A date to keep close</p><h2>Our <em>day</em></h2><p className="copy">A little magic is waiting for you</p></Reveal><ButterflyDate /></section>
+          <section className="sec date-sec"><Reveal><p className="small">A date to keep close</p><h2>Our <em>day</em></h2><p className="copy">A little magic is waiting for you</p></Reveal><ButterflyDate /></section>
 
-          <section className="sec" ref={rings}>
-            <Reveal><p className="small">The day we&apos;ve been waiting for</p><h2>Awaiting our <em>union</em></h2></Reveal>
-            <SafeBox><div className="ring3d"><Rings progress={ringProgress} /></div></SafeBox>
-            <Countdown />
-          </section>
+          <RingsSection open={open} />
 
           <Details />
           <Families />
@@ -427,6 +449,7 @@ export default function App() {
             <p className="copy">Your presence and your duas will make our day even more special.</p>
             {w.dua && <><div className="rule" /><p className="ar">{w.dua.ar}</p><p className="copy">“{w.dua.en}”</p></>}
             <p className="sign">{full}</p>
+            <button type="button" className="btn" onClick={share}>{copied ? 'Link copied ✓' : 'Share invitation'}</button>
           </Reveal></section>
           <footer>With love ✳ Kozhikode · {fmt({year: 'numeric'})}</footer>
         </main>
