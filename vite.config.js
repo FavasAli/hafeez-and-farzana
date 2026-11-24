@@ -1,3 +1,4 @@
 import {defineConfig} from 'vite'
 import react from '@vitejs/plugin-react'
-export default defineConfig({plugins:[react()]})
+// base './' lets the site work at https://<user>.github.io/<repo>/ as well as on a custom domain
+export default defineConfig({plugins: [react()], base: './'})
