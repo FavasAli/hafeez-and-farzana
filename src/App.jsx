@@ -163,7 +163,7 @@ function ButterflyDate() {
     timers.current.push(setTimeout(() => setRevealed(true), revealDelay), setTimeout(() => setBugs([]), 2900))
   }
   return (
-    <div className={`stage ${classic ? 'classic' : ''} ${phase === 'scattering' ? 'done' : ''} ${visible ? '' : 'paused'}`} style={{'--bimg': `url(${w.butterflyImage || '/images/butterfly.webp'})`}} role="button" tabIndex={0} aria-label="Touch the butterflies to reveal the wedding date"
+    <div className={`stage ${classic ? 'classic' : ''} ${phase === 'scattering' ? 'done' : ''} ${visible ? '' : 'paused'}`} style={{'--bimg': `url(${w.butterflyImage || 'images/butterfly.webp'})`}} role="button" tabIndex={0} aria-label="Touch the butterflies to reveal the wedding date"
       onClick={scatter} onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), scatter())}>
       <div className="cloud" ref={box}>
         <div className="swarm" aria-hidden>
@@ -222,7 +222,8 @@ function Countdown() {
   )
 }
 
-const un = (id, wd) => id.startsWith('/') ? id : `https://images.unsplash.com/${id}?auto=format&fit=crop&w=${wd}&q=85`
+// Unsplash photo ids ("photo-…") become Unsplash links; anything else (e.g. 'images/x.jpg' or a full URL) is used as-is.
+const un = (id, wd) => id.startsWith('photo-') ? `https://images.unsplash.com/${id}?auto=format&fit=crop&w=${wd}&q=85` : id
 
 function Gallery() {
   const g = w.gallery, albums = g.albums
