@@ -163,7 +163,7 @@ function ButterflyDate() {
     timers.current.push(setTimeout(() => setRevealed(true), revealDelay), setTimeout(() => setBugs([]), 2900))
   }
   return (
-    <div className={`stage ${classic ? 'classic' : ''} ${phase === 'scattering' ? 'done' : ''} ${visible ? '' : 'paused'}`} style={{'--bimg': `url(${w.butterflyImage || 'images/butterfly.webp'})`}} role="button" tabIndex={0} aria-label="Touch the butterflies to reveal the wedding date"
+    <div className={`stage ${classic ? 'classic' : ''} ${phase === 'scattering' ? 'done' : ''} ${visible ? '' : 'paused'}`} style={{'--bimg': `url("${new URL(w.butterflyImage || 'images/butterfly.webp', document.baseURI).href}")`}} role="button" tabIndex={0} aria-label="Touch the butterflies to reveal the wedding date"
       onClick={scatter} onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), scatter())}>
       <div className="cloud" ref={box}>
         <div className="swarm" aria-hidden>
